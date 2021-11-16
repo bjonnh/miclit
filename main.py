@@ -39,9 +39,13 @@ with st.expander("Click here for more help"):
     """)
 
 uploaded_file = st.file_uploader("Choose a XLS file formatted properly for this software")
+
+mic_value = st.number_input("MIC percentage to fit", value=90, min_value=1, max_value=99)
+
 if uploaded_file is not None:
     engine = imf_engine.Engine()
     engine.load_file(uploaded_file)
+    engine.MICn = mic_value
     engine.fit()
     with st.expander("Source data"):
         st.dataframe(engine.data.data)
@@ -53,4 +57,3 @@ if uploaded_file is not None:
     st.header("Tables")
 
     st.dataframe(engine.export_as_dataframe())
-
