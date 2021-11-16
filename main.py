@@ -2,6 +2,7 @@ import streamlit as st
 import itrmicfit.engine as imf_engine
 import itrmicfit.plotting as imf_plotting
 from matplotlib.figure import Figure
+import tempfile
 
 st.set_page_config(layout="wide")
 st.header("ITR MIC Fit")
@@ -57,3 +58,10 @@ if uploaded_file is not None:
     st.header("Tables")
 
     st.dataframe(engine.export_as_dataframe())
+
+    graphics = st.checkbox("Export graphics", value=True)
+    temp_file = tempfile.NamedTemporaryFile()
+    out = engine.export_as_spreadsheet(temp_file.name, graphics=graphics, fits=engine.fits)
+    st.download_button("Export table", data=temp_file.read(), file_name="export.xlsx")
+    temp_file.delete = True
+    temp_file.close()

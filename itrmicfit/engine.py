@@ -132,7 +132,7 @@ class Engine:
 
         if graphics is True:
             ws1 = wb.create_sheet("Graphic")
-            fig = plt.figure(1, (10, 5), tight_layout=True)
+            fig = plt.figure(1, (20, 20), tight_layout=True)
             plot(fits, fig=fig)
             buf = io.BytesIO()
             fig.savefig(buf, format='png', dpi=100)
