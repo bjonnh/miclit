@@ -94,7 +94,7 @@ class Fit:
 
 def group_by_name_and_widen(df):
     s = df.groupby("name").cumcount()
-    print(s)
+
     df1 = df.set_index(['name', s]).unstack().sort_index(level=1, axis=1)
     df1.columns = [f'{x}-{y}' for x, y in df1.columns]
     df1 = df1.reset_index()
@@ -111,21 +111,17 @@ def fit_from_sourcedata(data: SourceData, n: float) -> List[Fit]:
     all_concentrations = group_by_name_and_widen(data.concentrations)
     all_values = group_by_name_and_widen(data.values_normalized)
     for substance in set(data.concentrations.name):
-        print(f"Fitting {substance}")
         percentage = n
         concentration = None
         quality = MICQuality.NOT_DETERMINED
 
-        print("---")
+
         # Using the approch from:
         # https://stackoverflow.com/questions/56071160/combine-multiple-rows-in-pandas-dataframe-and-create-new-columns
 
         concentrations = all_concentrations[all_concentrations.name == substance].drop("name", axis=1).iloc[0, :]
         measured = all_values[all_values.name == substance].drop("name", axis=1).iloc[0, :]
-        print("concentrations")
-        print(concentrations)
-        print("measured")
-        print(measured)
+
         name = substance
         curve_df = DataFrame({'x': concentrations.values, 'measured': measured.values})
         _d0i = None
@@ -186,7 +182,7 @@ def fit_from_sourcedata(data: SourceData, n: float) -> List[Fit]:
             curve_fitted = None
 
         if quality == MICQuality.OVER_MEASURED_RANGE:
-            concentration = f"> {max(curve_df.x)} ({100 - 100 * max(curve_df.measured):00.0f}%)"
+            concentration = f"> {max(curve_df.x)} ({100 * max(curve_df.measured) - 100:00.0f}%)"
         elif quality == MICQuality.UNDER_MEASURED_RANGE:
             concentration = f"< {min(curve_df.x)} ({100 - 100 * min(curve_df.measured):00.0f}%)"
         # if mic_error is not None:
@@ -194,5 +190,5 @@ def fit_from_sourcedata(data: SourceData, n: float) -> List[Fit]:
         #        quality = MICQuality.POOR
         fits.append(Fit(name, fit_type, MIC(concentration, percentage, quality), curve_df, curve_fitted,
                         uncertainties={'d0i': _d0i, 'n': _n, 's': _s, 'o': _o, 'mic': mic_error}))
-        print("Done")
+
     return fits
