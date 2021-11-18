@@ -48,6 +48,7 @@ if uploaded_file is not None:
     engine.load_file(uploaded_file)
     engine.MICn = mic_value
     engine.fit()
+
     with st.expander("Source data"):
         st.dataframe(engine.data.data)
 
@@ -57,7 +58,9 @@ if uploaded_file is not None:
 
     st.header("Tables")
 
-    st.dataframe(engine.export_as_dataframe())
+    out = engine.export_as_dataframe()
+    out.index = out.name
+    st.dataframe(out.loc[engine.data.names, ~(out.columns == "name")])
 
     graphics = st.checkbox("Export graphics", value=True)
     temp_file = tempfile.NamedTemporaryFile()
