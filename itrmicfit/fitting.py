@@ -173,10 +173,12 @@ def fit_from_sourcedata(data: SourceData, n: float) -> List[Fit]:
                 if np.abs(curve_df.measured.min() - (1 - n)) < 0.01:
                     quality = MICQuality.ESTIMATED_FROM_INTERPOLATION
                     concentration = csvalue
-
-            if curve_df.measured.min() >= (1 - n):
-                # If the MIC is above the measured X value
+            # If the searched is above the minimaly measured X value
+            if (1-n) <= curve_df.measured.min():
+                quality = MICQuality.OVER_MEASURED_RANGE
+            elif (1-n) >= curve_df.measured.max():
                 quality = MICQuality.UNDER_MEASURED_RANGE
+
             fit_type = FitType.FITTED
         except RuntimeError:
             fit_type = FitType.NOT_FITTED
