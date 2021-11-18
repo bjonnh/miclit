@@ -42,10 +42,12 @@ with st.expander("Click here for more help"):
 uploaded_file = st.file_uploader("Choose a XLS file formatted properly for this software")
 
 mic_value = st.number_input("MIC percentage to fit", value=90, min_value=1, max_value=99)
+dilution_factor = st.number_input("Dilution factor", value=2.0, min_value=1.1, max_value=100.0)
 
 if uploaded_file is not None:
     engine = imf_engine.Engine()
     engine.load_file(uploaded_file)
+    engine.data.dilution_factor = dilution_factor
     engine.MICn = mic_value
     engine.fit()
 
