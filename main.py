@@ -60,7 +60,11 @@ if uploaded_file is not None:
 
     out = engine.export_as_dataframe()
     out.index = out.name
-    st.dataframe(out.loc[engine.data.names, ~(out.columns == "name")])
+
+    # dicts are ordered now, so we can just make a dict and we should keep the keys in order
+    # set does NOT do that!
+    ordered_unique_names = list(dict.fromkeys(engine.data.names))
+    st.dataframe(out.loc[ordered_unique_names, ~(out.columns == "name")])
 
     graphics = st.checkbox("Export graphics", value=True)
     temp_file = tempfile.NamedTemporaryFile()
