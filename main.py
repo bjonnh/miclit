@@ -54,6 +54,22 @@ if uploaded_file is not None:
     with st.expander("Source data"):
         st.dataframe(engine.data.data)
 
+        names = set(engine.data.names)
+        sample_name = st.selectbox("Sample name", names)
+        for fit in engine.fits:
+            if fit.name == sample_name:
+                data = fit.original_curve.sort_values("x")
+                st.dataframe(data)
+                csv = data.to_csv().encode('utf-8')
+                st.download_button(
+                    "Press to Download",
+                    csv,
+                    f"Calculated_values_{sample_name}.csv",
+                    "text/csv",
+                    key='download-csv'
+                )
+
+
     figure = Figure(figsize=(20, 20), tight_layout=True)
     imf_plotting.plot(engine.fits, figure)
     st.pyplot(figure)

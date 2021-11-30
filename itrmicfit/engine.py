@@ -38,7 +38,7 @@ class Engine:
 
         # That's the way we detect "raw" files
 
-        file = openpyxl.open(file)
+        file = openpyxl.open(file, data_only=True)
 
         worksheets_names = [name.title for name in file.worksheets]
 
@@ -86,6 +86,12 @@ class Engine:
         if self.onFitDone is not None:
             self.onFitDone()
 
+    def pretty_print_mic(self, value):
+        if type(value) is str:
+            return value
+        else:
+            return f"{float(value):.2g}"
+
     def export_as_dataframe(self):
         data = []
 
@@ -94,7 +100,7 @@ class Engine:
                          "initial concentration": self.data.initial_concentrations[index],
                          "type of fit": fit.type_of_fit.value,
                          "mic percentage": int(fit.mic.percentage * 100),
-                         "mic concentration": str(fit.mic.concentration),
+                         "mic concentration": self.pretty_print_mic(fit.mic.concentration),
                          "mic quality": fit.mic.quality.value,
                          "mic uncertainty": str(fit.uncertainties["mic"]),
                          "hill4p_d0i": fit.fitted_curve[0][0],

@@ -10,7 +10,7 @@ from uncertainties import ufloat
 from .sourcedata import SourceData
 
 
-def hill_4p_function(concentration, d0i: float = 0.01, n: float = 10, s: float = 1, o: float = 0):
+def hill_4p_function(concentration, d0i: float = 0.001, n: float = 10, s: float = 1, o: float = 0):
     """Hill 4p same as Hill 3p but with offset"""
     return o + s / (1 + (concentration / d0i) ** n)
 
@@ -22,8 +22,8 @@ def curve_to_dataframe(curve):
 
 def fit_hill_4p(curve_df):
     """Take the curve generated earlier and get the (popt, pcov, and function) of a fit of the hill 4p function"""
-    return (*curve_fit(hill_4p_function, curve_df.x.values, curve_df.measured.values,
-                       bounds=((curve_df.x.min(), 0.01, 0.1, 0.01), (curve_df.x.max(), 6, 4, 1))), hill_4p_function)
+    return (*curve_fit(hill_4p_function, curve_df.x.values, curve_df.measured.values, maxfev=100000, method="trf",
+                       bounds=((curve_df.x.min(), 0.0001, 0.01, 0.01), (curve_df.x.max(), 6, 4, 1))), hill_4p_function)
 
 
 def interpolate_curve_df_and_fitted(curve_df, curve_fitted, points=1000):
@@ -115,7 +115,6 @@ def fit_from_sourcedata(data: SourceData, n: float) -> List[Fit]:
         concentration = None
         quality = MICQuality.NOT_DETERMINED
 
-
         # Using the approch from:
         # https://stackoverflow.com/questions/56071160/combine-multiple-rows-in-pandas-dataframe-and-create-new-columns
 
@@ -145,19 +144,21 @@ def fit_from_sourcedata(data: SourceData, n: float) -> List[Fit]:
             try:
                 mic_error = _d0i * (_s / ((1 - n) - _o) - 1) ** (1 / _n)
             except ValueError:
+                print(f"Value Error for mic: {mic} _d0i: {_d0i} _s: {_s} n: {n} _o: {_o} _n: {_n}")
                 mic_error = None
-
+            print(solve)
             if solve[2] == 1 and curve_interpolated.fitted.min() < mic:
                 # If the MIC is above the measured X value
                 if mic > curve_interpolated.x.max():
                     quality = MICQuality.OVER_MEASURED_RANGE
                 else:
                     quality = MICQuality.OK
-
-                concentration = mic
             else:
                 if mic > curve_df.x.max():
                     quality = MICQuality.OVER_MEASURED_RANGE
+                else:
+                    quality = MICQuality.POOR
+            concentration = mic
 
             if quality == MICQuality.OK:
                 # We do not have a correct fit, we revert to a simple cubic splines interpolation
@@ -170,9 +171,9 @@ def fit_from_sourcedata(data: SourceData, n: float) -> List[Fit]:
                     quality = MICQuality.ESTIMATED_FROM_INTERPOLATION
                     concentration = csvalue
             # If the searched is above the minimaly measured X value
-            if (1-n) <= curve_df.measured.min():
+            if (1 - n) <= curve_df.measured.min():
                 quality = MICQuality.OVER_MEASURED_RANGE
-            elif (1-n) >= curve_df.measured.max():
+            elif (1 - n) >= curve_df.measured.max():
                 quality = MICQuality.UNDER_MEASURED_RANGE
 
             fit_type = FitType.FITTED
