@@ -27,7 +27,7 @@ class SourceData:
 
     def gather_names(self):
         if len(self.data['name'].values) > 0:
-            self.names = self.data['name'].replace(nan, '').values
+            self.names = self.data['name'].apply(str).replace(nan, '').values
             self.reset_names()
 
     def gather_concentrations(self):
