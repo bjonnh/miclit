@@ -75,9 +75,9 @@ def plot(data: List[Fit], fig: Figure):
                     hmax = curve_interpolated.x.max()
             elif fit.mic.quality == MICQuality.ESTIMATED_FROM_INTERPOLATION:
                 background = "#FFE0A0"
-                mic_title += " - Estimated from interpolation"
+                mic_title += f" - Estimated from interpolation"
                 mic_line_color = "#A0FF00"
-                hmax = fit.mic.concentration * 2
+                hmax = np.max(fit.original_curve.x.max())
             else:
                 background = "#FFA0A0"
                 mic_title += " - Cannot find an MIC"
@@ -86,8 +86,9 @@ def plot(data: List[Fit], fig: Figure):
         if mic_line_color is not None:
             if isinstance(fit.mic.concentration, np.float64):
                 axis.vlines(fit.mic.concentration, 0, 1, color=mic_line_color)
-            if hmax is not None:
-                axis.hlines(1 - fit.mic.percentage, 0, hmax, color="#004F00")
+        if hmax is not None:
+            print(fit.mic.percentage)
+            axis.hlines(1 - fit.mic.percentage, 0, hmax, color="#004F00")
 
         axis.set_title(f"{fit.name} {mic_title}")
         axis.set_facecolor(background)

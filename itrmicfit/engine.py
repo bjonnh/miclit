@@ -92,6 +92,12 @@ class Engine:
         else:
             return f"{float(value):.2g}"
 
+    def get_fit(self, fitted_curve):
+        if fitted_curve is not None:
+            return fitted_curve[0][0:4]
+        else:
+            return [None, None, None, None]
+
     def export_as_dataframe(self):
         data = []
 
@@ -103,10 +109,10 @@ class Engine:
                          "mic concentration": self.pretty_print_mic(fit.mic.concentration),
                          "mic quality": fit.mic.quality.value,
                          "mic uncertainty": str(fit.uncertainties["mic"]),
-                         "hill4p_d0i": fit.fitted_curve[0][0],
-                         "hill4p_n": fit.fitted_curve[0][1],
-                         "hill4p_s": fit.fitted_curve[0][2],
-                         "hill4p_o": fit.fitted_curve[0][3]
+                         "hill4p_d0i": self.get_fit(fit.fitted_curve)[0],
+                         "hill4p_n": self.get_fit(fit.fitted_curve)[1],
+                         "hill4p_s": self.get_fit(fit.fitted_curve)[2],
+                         "hill4p_o": self.get_fit(fit.fitted_curve)[3]
                          })
         return pd.DataFrame(data)
 
@@ -126,10 +132,10 @@ class Engine:
                        fit.mic.concentration,
                        fit.mic.quality.value,
                        str(fit.uncertainties["mic"]),
-                       fit.fitted_curve[0][0],
-                       fit.fitted_curve[0][1],
-                       fit.fitted_curve[0][2],
-                       fit.fitted_curve[0][3]
+                       self.get_fit(fit.fitted_curve)[0],
+                       self.get_fit(fit.fitted_curve)[1],
+                       self.get_fit(fit.fitted_curve)[2],
+                       self.get_fit(fit.fitted_curve)[3]
                        ])
 
         ws_source = wb.create_sheet("RAW")

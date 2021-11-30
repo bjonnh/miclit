@@ -44,6 +44,17 @@ def interpolate_cspline(curve_df):
     return fun
 
 
+def interpolate_naive(curve_df):
+    sorted_df = curve_df.sort_values(by=['x'])
+
+    tck = interpolate.UnivariateSpline(sorted_df.x, sorted_df.measured)
+
+    def fun(x):
+        return interpolate.splev(x, tck, der=0)
+
+    return fun
+
+
 def mic_intersect_prep(curve_fitted, limit=0.1):
     def mic_intersect(x):
         return curve_fitted[2](x, *curve_fitted[0]) - (1 - limit)
@@ -160,21 +171,28 @@ def fit_from_sourcedata(data: SourceData, n: float) -> List[Fit]:
                     quality = MICQuality.POOR
             concentration = mic
 
-            if quality == MICQuality.OK:
+            if (quality != MICQuality.OK) & (quality != MICQuality.POOR):
                 # We do not have a correct fit, we revert to a simple cubic splines interpolation
                 cscurve = interpolate_cspline(curve_df)
+                initial_value = curve_df.x.min()
                 solve = fsolve(mic_intersect_interpolated_prep(cscurve, n), initial_value, factor=0.1, full_output=True,
                                xtol=0.01)
+                print("Trying to solve")
+                print(f"solve is : {solve}")
                 csvalue = solve[0][0]
 
-                if np.abs(curve_df.measured.min() - (1 - n)) < 0.01:
-                    quality = MICQuality.ESTIMATED_FROM_INTERPOLATION
-                    concentration = csvalue
+                #if np.abs(curve_df.measured.min() - (1 - n)) < 0.01:
+                quality = MICQuality.ESTIMATED_FROM_INTERPOLATION
+                concentration = csvalue
+                mic_error = None
+                curve_fitted = None
             # If the searched is above the minimaly measured X value
             if (1 - n) <= curve_df.measured.min():
                 quality = MICQuality.OVER_MEASURED_RANGE
+                curve_fitted = None
             elif (1 - n) >= curve_df.measured.max():
                 quality = MICQuality.UNDER_MEASURED_RANGE
+                curve_fitted = None
 
             fit_type = FitType.FITTED
         except RuntimeError:
